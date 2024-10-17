@@ -1,29 +1,30 @@
 package br.ufal.ic.p2.myfood.model;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Order {
     private static int idCounter = 1;
-    private int numberOrder;
-    private int clientId;
-    private int companyId;
+    private int idOrder;
+    private int idCustomer;
+    private int idCompany;
     private String state;
     private float value;
 
     private List<Product> productList;
 
-    private static final String ABERTO = "aberto";
+    private static final String OPEN = "open";
 
     public Order() {
     }
 
-    public Order(int clientId, int companyId) {
-        this.numberOrder = idCounter++;
-        this.clientId = clientId;
-        this.companyId = companyId;
-        this.state = ABERTO;
+    public Order(int idCustomer, int idCompany) {
+        this.idOrder = idCounter++;
+        this.idCustomer = idCustomer;
+        this.idCompany = idCompany;
+        this.state = OPEN;
         this.value = 0;
         this.productList = new ArrayList<>();
     }
@@ -36,28 +37,28 @@ public class Order {
         Order.idCounter = idCounter;
     }
 
-    public int getNumberOrder() {
-        return numberOrder;
+    public int getIdOrder() {
+        return idOrder;
     }
 
-    public void setNumberOrder(int numberOrder) {
-        this.numberOrder = numberOrder;
+    public void setIdOrder(int idOrder) {
+        this.idOrder = idOrder;
     }
 
-    public int getClientId() {
-        return clientId;
+    public int getIdCustomer() {
+        return idCustomer;
     }
 
-    public void setClientId(int clientId) {
-        this.clientId = clientId;
+    public void setIdCustomer(int idCustomer) {
+        this.idCustomer = idCustomer;
     }
 
-    public int getCompanyId() {
-        return companyId;
+    public int getIdCompany() {
+        return idCompany;
     }
 
-    public void setCompanyId(int companyId) {
-        this.companyId = companyId;
+    public void setIdCompany(int idCompany) {
+        this.idCompany = idCompany;
     }
 
     public String getState() {
@@ -82,10 +83,6 @@ public class Order {
 
     public void setProductList(List<Product> productList) {
         this.productList = productList;
-        value = 0;
-        for (Product product : productList) {
-            value += product.getValue();
-        }
     }
 
     public void addProduct(Product product) {
@@ -93,16 +90,11 @@ public class Order {
         value += product.getValue();
     }
 
-    public String productString() {
-        StringBuilder stringProduct = new StringBuilder("{[");
-        for (Product product : productList) {
-            stringProduct.append(product.getName()).append(", ");
-        }
-        if (stringProduct.length() > 2) {
-            stringProduct = new StringBuilder(stringProduct.substring(0, stringProduct.length() - 2));
-        }
-        stringProduct.append("]}");
-        return stringProduct.toString();
+    public String productInString() {
+        return productList.stream()
+                .sorted(Comparator.comparingInt(Product::getId))
+                .map(Product::getName)
+                .collect(Collectors.joining(", ", "{[", "]}"));
     }
 
     public void removeProduct(Product product) {

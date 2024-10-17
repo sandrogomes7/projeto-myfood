@@ -19,7 +19,7 @@ public abstract class User {
         this.address = address;
     }
 
-    public abstract boolean canCreateCompany();
+    public abstract String userQualification();
 
     public static int getIdCounter() {
         return idCounter;

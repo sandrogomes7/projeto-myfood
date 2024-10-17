@@ -17,8 +17,8 @@ public class CompanyOwner extends User {
     }
 
     @Override
-    public boolean canCreateCompany() {
-        return true;
+    public String userQualification() {
+        return "Company Owner";
     }
 
     public String getCpf() {

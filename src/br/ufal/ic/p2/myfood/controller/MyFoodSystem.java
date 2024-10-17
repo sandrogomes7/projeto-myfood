@@ -1,10 +1,7 @@
 package br.ufal.ic.p2.myfood.controller;
 
 import br.ufal.ic.p2.myfood.repository.Data;
-import br.ufal.ic.p2.myfood.service.CompanyService;
-import br.ufal.ic.p2.myfood.service.OrderService;
-import br.ufal.ic.p2.myfood.service.ProductService;
-import br.ufal.ic.p2.myfood.service.UserService;
+import br.ufal.ic.p2.myfood.service.*;
 
 public class MyFoodSystem {
     private final Data database = Data.getInstance();
@@ -13,6 +10,7 @@ public class MyFoodSystem {
     private final CompanyService companyService = new CompanyService(database);
     private final ProductService productService = new ProductService(database);
     private final OrderService orderService = new OrderService(database);
+    private final DeliveryService deliveryService = new DeliveryService(database);
 
     public MyFoodSystem() throws Exception {
     }
@@ -23,79 +21,131 @@ public class MyFoodSystem {
         database.removeAllUsers();
     }
 
-    public String getUserAttribute(int id, String atributo) throws Exception {
-        return userService.getUserAttribute(id, atributo);
+    public String getUserAttribute(int id, String attribute) throws Exception {
+        return userService.getUserAttribute(id, attribute);
     }
 
-    public void createUser(String nome, String email, String senha, String endereco) throws Exception {
-        userService.createClientUser(nome, email, senha, endereco);
+    public void createUser(String name, String email, String password, String address) throws Exception {
+        userService.createCustomerUser(name, email, password, address);
     }
 
-    public void createUser(String nome, String email, String senha, String endereco, String cpf) throws Exception {
-        userService.createOwnerUser(nome, email, senha, endereco, cpf);
+    public void createUser(String name, String email, String password, String address, String cpf) throws Exception {
+        userService.createOwnerUser(name, email, password, address, cpf);
     }
 
-    public int login(String email, String senha) throws Exception {
-        return userService.signIn(email, senha);
+    public void createUser(String name, String email, String password, String address, String vehicle, String licensePlate) throws Exception {
+        userService.createDeliveryPerson(name, email, password, address, vehicle, licensePlate);
+    }
+
+    public int login(String email, String password) throws Exception {
+        return userService.signIn(email, password);
     }
 
     public void endSystem() throws Exception {
         database.save();
     }
 
-    public int createCompany(String tipoEmpresa, int idDono, String nomeEmpresa, String endereco, String tipoCozinha) throws Exception {
-        return companyService.createCompany(tipoEmpresa, idDono, nomeEmpresa, endereco, tipoCozinha);
+    public int createCompany(String companyType, int ownerId, String companyName, String address, String kitchenType) throws Exception {
+        return companyService.createCompanyRestaurant(companyType, ownerId, companyName, address, kitchenType);
     }
 
-    public String getUserCompanies(int idDono) throws Exception {
-        return companyService.listCompaniesByOwner(idDono);
+    public String getUserCompanies(int ownerId) throws Exception {
+        return companyService.listCompaniesByOwner(ownerId);
     }
 
-    public String getCompanyAttribute(int idDono, String atributoBuscado) throws Exception {
-        return companyService.getCompanyAttribute(idDono, atributoBuscado);
+    public String getCompanyAttribute(int ownerId, String searchedAttribute) throws Exception {
+        return companyService.getCompanyAttribute(ownerId, searchedAttribute);
     }
 
-    public int getCompanyId(int idEmpresa, String nomeEmpresa, int indice) throws Exception {
-        return companyService.getIdCompany(idEmpresa, nomeEmpresa, indice);
+    public int getCompanyId(int companyId, String companyName, int index) throws Exception {
+        return companyService.getIdCompany(companyId, companyName, index);
     }
 
-    public int createProduct(int empresa, String nome, float valor, String categoria) throws Exception {
-        return productService.createProduct(empresa, nome, valor, categoria);
+    public int createProduct(int company, String name, float price, String category) throws Exception {
+        return productService.createProduct(company, name, price, category);
     }
 
-    public void editProduct(int produto, String nome, float valor, String categoria) throws Exception {
-        productService.editProduct(produto, nome, valor, categoria);
+    public void editProduct(int product, String name, float price, String category) throws Exception {
+        productService.editProduct(product, name, price, category);
     }
 
-    public String getProduct(String nome, int empresa, String atributo) throws Exception {
-        return productService.getProductAttribute(nome, empresa, atributo);
+    public String getProduct(String name, int company, String attribute) throws Exception {
+        return productService.getProductAttribute(name, company, attribute);
     }
 
-    public String listProducts(int empresa) throws Exception {
-        return productService.listProductsOfCompany(empresa);
+    public String listProducts(int company) throws Exception {
+        return productService.listProductsOfCompany(company);
     }
 
-    public int createOrder(int cliente, int empresa) throws Exception {
-        return orderService.createOrder(cliente, empresa);
+    public int createOrder(int client, int company) throws Exception {
+        return orderService.createOrder(client, company);
     }
 
-    public void addProduct(int numeroPedido, int numeroProduto) throws Exception {
-        orderService.addProductToOrder(numeroPedido, numeroProduto);
+    public void addProduct(int orderNumber, int productNumber) throws Exception {
+        orderService.addProductToOrder(orderNumber, productNumber);
     }
 
-    public String getOrders(int numero, String atributo) throws Exception {
-        return orderService.getOrderProductAttribute(numero, atributo);
+    public String getOrders(int number, String attribute) throws Exception {
+        return orderService.getOrderProductAttribute(number, attribute);
     }
 
-    public void closeOrder(int numero) throws Exception {
-        orderService.closeOrder(numero);
+    public void closeOrder(int number) throws Exception {
+        orderService.closeOrder(number);
     }
 
-    public void removeProduct(int pedido, String produto) throws Exception {
-        orderService.removeProductFromOrder(pedido, produto);
+    public void removeProduct(int order, String product) throws Exception {
+        orderService.removeProductFromOrder(order, product);
     }
 
-    public int getOrderNumber(int cliente, int empresa, int indice) throws Exception {
-        return orderService.getOrderNumber(cliente, empresa, indice);
+    public int getOrderNumber(int client, int company, int index) throws Exception {
+        return orderService.getOrderNumber(client, company, index);
+    }
+
+    public int createCompany(String companyType, int ownerId, String companyName, String address, String open, String close, String marketType) throws Exception {
+        return companyService.createCompanyMarket(companyType, ownerId, companyName, address, open, close, marketType);
+    }
+
+    public void changeMarketHours(int marketId, String open, String close) throws Exception {
+        companyService.changeMarketHours(marketId, open, close);
+    }
+
+    public int createCompany(String companyType, int ownerId, String companyName, String address, Boolean open24Hours, int employeeCount) throws Exception {
+        return companyService.createCompanyPharmacy(companyType, ownerId, companyName, address, open24Hours, employeeCount);
+    }
+
+    public void registerDeliveryUser(int company, int deliveryUser) throws Exception {
+        companyService.registerDeliveryPerson(company, deliveryUser);
+    }
+
+    public String getDeliveryPersons(int company) throws Exception {
+        return companyService.getDeliveryPersons(company);
+    }
+
+    public String getCompanies(int deliveryPerson) throws Exception {
+        return userService.getCompanies(deliveryPerson);
+    }
+
+    public void releaseOrder(int order) throws Exception {
+        orderService.releaseOrder(order);
+    }
+
+    public int getOrder(int deliveryPerson) throws Exception {
+        return orderService.getOrder(deliveryPerson);
+    }
+
+    public int createDelivery(int order, int deliveryPerson, String destination) throws Exception {
+        return deliveryService.createDelivery(order, deliveryPerson, destination);
+    }
+
+    public String getDelivery(int deliveryId, String attribute) throws Exception {
+        return deliveryService.getDelivery(deliveryId, attribute);
+    }
+
+    public int getIdDelivery(int order) throws Exception {
+        return deliveryService.getIdDelivery(order);
+    }
+
+    public void deliver(int idDelivery) throws Exception {
+        deliveryService.deliver(idDelivery);
     }
 }

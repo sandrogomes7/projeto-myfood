@@ -1,10 +1,9 @@
 package br.ufal.ic.p2.myfood.model;
 
-
 public class Product {
     private static int idCounter = 1;
     private int id;
-    private int companyId;
+    private int idCompany;
     private String name;
     private float value;
     private String category;
@@ -12,9 +11,9 @@ public class Product {
     public Product() {
     }
 
-    public Product(int companyId, String name, float value, String category) {
+    public Product(int idCompany, String name, float value, String category) {
         this.id = idCounter++;
-        this.companyId = companyId;
+        this.idCompany = idCompany;
         this.name = name;
         this.value = value;
         this.category = category;
@@ -36,12 +35,12 @@ public class Product {
         this.id = id;
     }
 
-    public int getCompanyId() {
-        return companyId;
+    public int getIdCompany() {
+        return idCompany;
     }
 
-    public void setCompanyId(int companyId) {
-        this.companyId = companyId;
+    public void setIdCompany(int idCompany) {
+        this.idCompany = idCompany;
     }
 
     public String getName() {

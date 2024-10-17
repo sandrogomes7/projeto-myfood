@@ -1,34 +1,34 @@
 package br.ufal.ic.p2.myfood.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Customer extends User {
-    private List<Order> orderList;
+    private Map<Integer, Order> orderList;
 
     public Customer() {
     }
 
     public Customer(String name, String email, String password, String address) {
         super(name, email, password, address);
-        orderList = new ArrayList<>();
+        orderList = new HashMap<>();
     }
 
     @Override
-    public boolean canCreateCompany() {
-        return false;
+    public String userQualification() {
+        return "Customer";
     }
 
-    public List<Order> getOrderList() {
+    public Map<Integer, Order> getOrderList() {
         return orderList;
     }
 
-    public void setOrderList(List<Order> orderList) {
+    public void setOrderList(Map<Integer, Order> orderList) {
         this.orderList = orderList;
     }
 
     public void addOrder(Order order) {
-        orderList.add(order);
+        orderList.put(order.getIdOrder(), order);
     }
 
 }

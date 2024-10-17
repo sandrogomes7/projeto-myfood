@@ -2,12 +2,9 @@ package br.ufal.ic.p2.myfood.service;
 
 import br.ufal.ic.p2.myfood.exception.*;
 import br.ufal.ic.p2.myfood.exception.order.*;
-import br.ufal.ic.p2.myfood.model.Company;
-import br.ufal.ic.p2.myfood.model.Customer;
-import br.ufal.ic.p2.myfood.model.Order;
-import br.ufal.ic.p2.myfood.model.Product;
-import br.ufal.ic.p2.myfood.model.User;
+import br.ufal.ic.p2.myfood.model.*;
 import br.ufal.ic.p2.myfood.repository.Data;
+import br.ufal.ic.p2.myfood.util.AttributeTranslation;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -17,165 +14,183 @@ public class OrderService {
     private final Map<Integer, Company> companyList;
     private final Map<Integer, User> userList;
 
-    private static final String ABERTO = "aberto";
-    private static final String PREPARANDO = "preparando";
-    private static final String FECHADO = "fechado";
+    private static final String OPEN = "open";
+    private static final String PREPARING = "preparing";
+    private static final String READY = "ready";
+    private static final String OWNER_QUALIFICATION = "Company Owner";
+    private static final String DELIVERY_QUALIFICATION = "Delivery Person";
+    private static final String PHARMACY = "pharmacy";
 
     public OrderService(Data data) {
         this.companyList = data.getCompanyList();
         this.userList = data.getUserList();
     }
 
-    public int createOrder(int client, int company) throws Exception {
-        User user = userList.get(client);
-        if (user.canCreateCompany()) throw new DonoNaoPodeCriarPedidoException();
+    public int createOrder(int idCustomer, int idCompany) throws Exception {
+        User user = userList.get(idCustomer);
+        if (user.userQualification().equals(OWNER_QUALIFICATION)) throw new DonoNaoPodeCriarPedidoException();
 
         Customer currentCustomer = (Customer) user;
-        Company currentCompany = companyList.get(company);
+        Company currentCompany = companyList.get(idCompany);
 
         validateCompany(currentCompany);
 
-        for (Order orderAux1 : currentCustomer.getOrderList()) {
-            if (orderAux1.getCompanyId() == company) {
-                for (Order orderAux2 : currentCompany.getOrderList()) {
-                    if (orderAux2.getState().equals(ABERTO)) {
-                        throw new NaoPermiteDoisPedidoAbertoException();
-                    }
-                }
-            }
-        }
+        boolean hasOpenOrder = currentCustomer.getOrderList().values().stream()
+                .anyMatch(order -> order.getIdCompany() == idCompany && order.getState().equals(OPEN));
 
-        Order order = new Order(client, company);
+        if (hasOpenOrder) throw new NaoPermiteDoisPedidoAbertoException();
+
+        Order order = new Order(idCustomer, idCompany);
         currentCompany.addOrder(order);
         currentCustomer.addOrder(order);
 
-        return order.getNumberOrder();
+        return order.getIdOrder();
     }
 
-    public int getOrderNumber(int client, int company, int index) throws Exception {
-        User user = userList.get(client);
-        if (user.canCreateCompany()) throw new DonoNaoPodeCriarPedidoException();
+    public int getOrderNumber(int idCustomer, int idCompany, int index) throws Exception {
+        User user = userList.get(idCustomer);
+        if (user.userQualification().equals(OWNER_QUALIFICATION)) throw new DonoNaoPodeCriarPedidoException();
 
         Customer currentCustomer = (Customer) user;
-        Company currentCompany = companyList.get(company);
+        Company currentCompany = companyList.get(idCompany);
 
         validateCompany(currentCompany);
 
-        List<Order> ordersUser = new ArrayList<>();
-        for (Order order : currentCustomer.getOrderList()) {
-            if (order.getCompanyId() == company) {
-                ordersUser.add(order);
-            }
-        }
+        List<Order> ordersUser = currentCustomer.getOrderList().values().stream()
+                .filter(order -> order.getIdCompany() == idCompany)
+                .toList();
 
         if (ordersUser.isEmpty()) throw new PedidoNaoEncontradoException();
+        if (ordersUser.size() <= index) throw new IndiceMaiorQueEsperadoException();
 
-        if (ordersUser.size() <= index) throw new IndiceMaiorQueEsperadoExceptio();
-
-        return ordersUser.get(index).getNumberOrder();
+        return ordersUser.get(index).getIdOrder();
     }
 
-    public void addProductToOrder(int numberOrder, int product) throws Exception {
-        Order order = null;
-        Company company = null;
-
-        for (Company companyAux : companyList.values()) {
-            order = companyAux.getOrderList().stream()
-                    .filter(p -> p.getNumberOrder() == numberOrder)
-                    .findFirst()
-                    .orElse(null);
-
-            if (order != null) {
-                company = companyAux;
-                break;
-            }
-        }
-
-        if (order == null) throw new NaoExistePedidoAbertoException();
-
-        if (order.getState().equals(PREPARANDO)) throw new NaoPermiteAdicionarProdutoException();
-
-        if (!order.getState().equals(ABERTO)) throw new PedidoNaoEncontradoException();
-
-        for (Product productAux : company.getProductList()) {
-            if (productAux.getId() == product) {
-                order.addProduct(productAux);
-                return;
-            }
-        }
-
-        throw new ProdutoNaoPertenceEmpresaException();
-    }
-
-    public String getOrderProductAttribute(int numberOrder, String attribute) throws Exception {
-        if (attribute == null || attribute.isEmpty()) throw new AtributoInvalidoExceptio();
-
+    public void addProductToOrder(int idOrder, int idProduct) throws Exception {
         Order order = companyList.values().stream()
-                .flatMap(company -> company.getOrderList().stream())
-                .filter(p -> p.getNumberOrder() == numberOrder)
+                .flatMap(company -> company.getOrderList().values().stream())
+                .filter(p -> p.getIdOrder() == idOrder)
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(NaoExistePedidoAbertoException::new);
 
-        if (order == null) throw new PedidoNaoEncontradoException();
+        if (order.getState().equals(PREPARING)) throw new NaoPermiteAdicionarProdutoException();
+        if (!order.getState().equals(OPEN)) throw new PedidoNaoEncontradoException();
 
-        return switch (attribute) {
-            case "estado" -> order.getState();
-            case "valor" -> String.format("%.2f", order.getValue()).replace(",", ".");
-            case "cliente" -> userList.get(order.getClientId()).getName();
-            case "empresa" -> companyList.get(order.getCompanyId()).getName();
-            case "produtos" -> order.productString();
+        Company company = companyList.values().stream()
+                .filter(c -> c.getOrderList().containsValue(order))
+                .findFirst()
+                .orElseThrow(PedidoNaoEncontradoException::new);
 
+        Product productAux = company.getProductList().values().stream()
+                .filter(p -> p.getId() == idProduct)
+                .findFirst()
+                .orElseThrow(ProdutoNaoPertenceEmpresaException::new);
+
+        order.addProduct(productAux);
+    }
+
+    public String getOrderProductAttribute(int idOrder, String attribute) throws Exception {
+        if (attribute == null || attribute.isEmpty()) throw new AtributoInvalidoException();
+
+        Order companyOrder = findOrder(idOrder, true);
+
+        String englishAttribute = AttributeTranslation.getEnglishAttribute(attribute);
+        return switch (englishAttribute) {
+            case "state" -> AttributeTranslation.getPortugueseAttribute(companyOrder.getState());
+            case "value" -> String.format("%.2f", companyOrder.getValue()).replace(",", ".");
+            case "customer" -> userList.get(companyOrder.getIdCustomer()).getName();
+            case "company" -> companyList.get(companyOrder.getIdCompany()).getName();
+            case "products" -> companyOrder.productInString();
             default -> throw new AtributoNaoExisteException();
         };
     }
 
-    public void closeOrder(int numberOrder) throws Exception {
-        Order companyOrder = companyList.values().stream()
-                .flatMap(company -> company.getOrderList().stream())
-                .filter(order -> order.getNumberOrder() == numberOrder)
-                .findFirst()
-                .orElse(null);
+    public void closeOrder(int idOrder) throws Exception {
+        Order companyOrder = findOrder(idOrder, true);
+        Order userOrder = findOrder(idOrder, false);
 
-        Order userOrder = userList.values().stream()
-                .filter(user -> !user.canCreateCompany())
-                .map(user -> (Customer) user)
-                .flatMap(user -> user.getOrderList().stream())
-                .filter(order -> order.getNumberOrder() == numberOrder)
-                .findFirst()
-                .orElse(null);
-
-        if (companyOrder == null || userOrder == null) throw new PedidoNaoEncontradoException();
-
-        companyOrder.setState(PREPARANDO);
-        userOrder.setState(PREPARANDO);
+        companyOrder.setState(PREPARING);
+        userOrder.setState(PREPARING);
     }
 
-    public void removeProductFromOrder(int numberOrder, String nameProduct) throws Exception {
-        Order currentOrder = companyList.values().stream()
-                .flatMap(company -> company.getOrderList().stream())
-                .filter(order -> order.getNumberOrder() == numberOrder)
-                .findFirst()
-                .orElse(null);
-
-        if (currentOrder == null) throw new PedidoNaoEncontradoException();
-
+    public void removeProductFromOrder(int idOrder, String nameProduct) throws Exception {
         if (nameProduct == null || nameProduct.isEmpty()) throw new ProdutoInvalidoException();
+        Order companyOrder = findOrder(idOrder, true);
 
-        if (currentOrder.getState().equals(PREPARANDO)) throw new NaoPermiteRemoverEmPedidoFechadoException();
+        if (companyOrder.getState().equals(PREPARING)) throw new NaoPermiteRemoverEmPedidoFechadoException();
+        if (!companyOrder.getState().equals(OPEN)) throw new PedidoNaoEncontradoException();
 
-        if (!currentOrder.getState().equals(ABERTO)) throw new PedidoNaoEncontradoException();
+        Product productToRemove = companyOrder.getProductList().stream()
+                .filter(product -> product.getName().equals(nameProduct))
+                .findFirst()
+                .orElseThrow(ProdutoNaoEncontradoException::new);
 
-        for (Product product : currentOrder.getProductList()) {
-            if (product.getName().equals(nameProduct)) {
-                currentOrder.removeProduct(product);
-                return;
+        companyOrder.removeProduct(productToRemove);
+    }
+
+    public void releaseOrder(int idOrder) throws Exception {
+        Order companyOrder = findOrder(idOrder, true);
+        Order userOrder = findOrder(idOrder, false);
+
+        if (companyOrder.getState().equals(READY) || userOrder.getState().equals(READY))
+            throw new PedidoJaLiberadoException();
+        if (!companyOrder.getState().equals(PREPARING) || !userOrder.getState().equals(PREPARING))
+            throw new NaoEhPossivelLiberarException();
+
+        companyOrder.setState(READY);
+        userOrder.setState(READY);
+    }
+
+    public int getOrder(int idDeliveryPerson) throws Exception {
+        DeliveryPerson user = userList.values().stream()
+                .filter(u -> u.userQualification().equals(DELIVERY_QUALIFICATION))
+                .map(u -> (DeliveryPerson) u)
+                .filter(u -> u.getId() == idDeliveryPerson)
+                .findFirst()
+                .orElseThrow(UsuarioNaoEhEntregadorException::new);
+
+        List<Order> orders = new ArrayList<>();
+        for (Company company : user.getCompanyList()) {
+            for (Order order : company.getOrderList().values()) {
+                if (company.getCompanyType().equals(PHARMACY) && order.getState().equals(READY)) {
+                    orders.add(order);
+                }
             }
         }
 
-        throw new ProdutoNaoEncontradoException();
+        for (Company company : user.getCompanyList()) {
+            for (Order order : company.getOrderList().values()) {
+                if (!company.getCompanyType().equals(PHARMACY) && order.getState().equals(READY)) {
+                    orders.add(order);
+                }
+            }
+        }
+
+        if (user.getCompanyList().isEmpty()) throw new EntregadorNaoEstarEmNenhumaEmpresaException();
+        if (orders.isEmpty()) throw new NaoExistePedidoParaEntregaException();
+
+        return orders.getFirst().getIdOrder();
     }
 
-    public void validateCompany(Company company) throws Exception {
+    private void validateCompany(Company company) throws Exception {
         if (company == null) throw new EmpresaNaoEncontradaException();
+    }
+
+    private Order findOrder(int idOrder, boolean isCompanyOrder) throws Exception {
+        if (isCompanyOrder) {
+           return userList.values().stream()
+                    .filter(user -> !user.userQualification().equals(OWNER_QUALIFICATION))
+                    .map(user -> (Customer) user)
+                    .flatMap(user -> user.getOrderList().values().stream())
+                    .filter(o -> o.getIdOrder() == idOrder)
+                    .findFirst()
+                    .orElseThrow(PedidoNaoEncontradoException::new);
+        } else {
+            return companyList.values().stream()
+                    .flatMap(company -> company.getOrderList().values().stream())
+                    .filter(o -> o.getIdOrder() == idOrder)
+                    .findFirst()
+                    .orElseThrow(PedidoNaoEncontradoException::new);
+        }
     }
 }

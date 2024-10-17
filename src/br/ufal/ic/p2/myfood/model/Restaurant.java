@@ -6,8 +6,8 @@ public class Restaurant extends Company {
     public Restaurant() {
     }
 
-    public Restaurant(String companyType, int owner, String name, String address, String cuisineType) {
-        super(companyType, owner, name, address);
+    public Restaurant(String companyType, int idOwner, String name, String address, String cuisineType) {
+        super(companyType, idOwner, name, address);
         this.cuisineType = cuisineType;
     }
 

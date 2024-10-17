@@ -13,6 +13,7 @@ public class Facade {
         sys.resetSystem();
     }
 
+
     public String getAtributoUsuario(int id, String atributo) throws Exception {
         return sys.getUserAttribute(id, atributo);
     }
@@ -25,6 +26,12 @@ public class Facade {
         sys.createUser(nome, email, senha, endereco, cpf);
     }
 
+    //criarUsuario(String: nome, String: email, String: senha, String: endereco, String veiculo, String placa)
+
+    public void criarUsuario(String nome, String email, String senha, String endereco, String veiculo, String placa) throws Exception {
+        sys.createUser(nome, email, senha, endereco, veiculo, placa);
+    }
+
     public int login(String email, String senha) throws Exception {
         return sys.login(email, senha);
     }
@@ -33,8 +40,17 @@ public class Facade {
         sys.endSystem();
     }
 
-    public int criarEmpresa(String tipoEmpresa, int idDono, String nomeEmpresa, String endereco, String tipoCozinha) throws Exception {
-        return sys.createCompany(tipoEmpresa, idDono, nomeEmpresa, endereco, tipoCozinha);
+    public int criarEmpresa(String tipoEmpresaRestaurante, int dono, String nome, String endereco, String tipoCozinha) throws Exception {
+        return sys.createCompany(tipoEmpresaRestaurante, dono, nome, endereco, tipoCozinha);
+    }
+
+    public int criarEmpresa(String tipoEspresaMercado, int idDono, String nomeEmpresa, String endereco, String abre, String fecha, String tipoMercado) throws Exception {
+        return sys.createCompany(tipoEspresaMercado, idDono, nomeEmpresa, endereco, abre, fecha, tipoMercado);
+    }
+
+    public int criarEmpresa(String tipoEmpresaFarmacia, int idDono, String nomeEmpresa, String endereco, Boolean aberto24Horas, int numeroFuncionarios) throws Exception {
+
+        return sys.createCompany(tipoEmpresaFarmacia, idDono, nomeEmpresa, endereco, aberto24Horas, numeroFuncionarios);
     }
 
     public String getEmpresasDoUsuario(int id) throws Exception {
@@ -50,6 +66,7 @@ public class Facade {
     }
 
     public int criarProduto(int empresa, String nome, float valor, String categoria) throws Exception {
+
         return sys.createProduct(empresa, nome, valor, categoria);
     }
 
@@ -88,4 +105,45 @@ public class Facade {
     public int getNumeroPedido(int cliente, int empresa, int indice) throws Exception {
         return sys.getOrderNumber(cliente, empresa, indice);
     }
+
+    public void alterarFuncionamento(int idMercado, String abre, String fecha) throws Exception {
+        sys.changeMarketHours(idMercado, abre, fecha);
+    }
+
+    public void cadastrarEntregador(int company, int deliveryUser) throws Exception {
+        sys.registerDeliveryUser(company, deliveryUser);
+    }
+
+    public String getEntregadores(int empresa) throws Exception {
+       return sys.getDeliveryPersons(empresa);
+    }
+
+    public String getEmpresas(int entregador) throws Exception {
+        return sys.getCompanies(entregador);
+    }
+
+    public void liberarPedido(int pedido) throws Exception {
+        sys.releaseOrder(pedido);
+    }
+
+    public int obterPedido(int entregador) throws Exception {
+        return sys.getOrder(entregador);
+    }
+
+    public int criarEntrega(int pedido, int entregador, String destino) throws Exception {
+        return sys.createDelivery(pedido, entregador, destino);
+    }
+
+    public String getEntrega(int entrega, String atributo)  throws Exception {
+        return sys.getDelivery(entrega, atributo);
+    }
+
+    public int getIdEntrega(int pedido) throws Exception {
+        return sys.getIdDelivery(pedido);
+    }
+
+    public void entregar(int entrega) throws Exception {
+        sys.deliver(entrega);
+    }
+
 }

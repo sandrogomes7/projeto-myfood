@@ -24,10 +24,14 @@ public class Persistence {
             directory.mkdirs();
         }
 
+        eraseData();
+
         try (XMLEncoder e = new XMLEncoder(
                 new BufferedOutputStream(
                         new FileOutputStream(FILE_PERSISTENCE)))) {
+
             e.writeObject(data);
+
         } catch (FileNotFoundException e) {
             throw new ErroAoSalvarArquivoException();
         }

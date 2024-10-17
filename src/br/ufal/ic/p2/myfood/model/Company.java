@@ -1,32 +1,38 @@
 package br.ufal.ic.p2.myfood.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class Company {
     private static int idCounter = 1;
     private int id;
     private String companyType;
-    private int owner;
+    private int idOwner;
     private String name;
     private String address;
 
-    private List<Product> productList;
-    private List<Order> orderList;
+    private Map<Integer, Product> productList;
+    private Map<Integer, Order> orderList;
+    private Map<Integer, DeliveryPerson> deliveryPersonList;
+    private Map<Integer, Delivery> deliveryList;
 
     public Company() {
     }
 
-    public Company(String companyType, int owner, String name, String address) {
+    public Company(String companyType, int idOwner, String name, String address) {
         this.id = idCounter++;
         this.companyType = companyType;
-        this.owner = owner;
+        this.idOwner = idOwner;
         this.name = name;
         this.address = address;
-        this.productList = new ArrayList<>();
-        this.orderList = new ArrayList<>();
+        this.productList = new HashMap<>();
+        this.orderList = new HashMap<>();
+        this.deliveryPersonList = new HashMap<>();
+        this.deliveryList = new HashMap<>();
     }
 
+    // Getters and Setters
     public static int getIdCounter() {
         return idCounter;
     }
@@ -51,12 +57,12 @@ public abstract class Company {
         this.companyType = companyType;
     }
 
-    public int getOwner() {
-        return owner;
+    public int getIdOwner() {
+        return idOwner;
     }
 
-    public void setOwner(int owner) {
-        this.owner = owner;
+    public void setIdOwner(int idOwner) {
+        this.idOwner = idOwner;
     }
 
     public String getName() {
@@ -75,28 +81,67 @@ public abstract class Company {
         this.address = address;
     }
 
-    public List<Product> getProductList() {
+    public Map<Integer, Product> getProductList() {
         return productList;
     }
 
-    public void setProductList(List<Product> productList) {
+    public void setProductList(Map<Integer, Product> productList) {
         this.productList = productList;
     }
 
-    public List<Order> getOrderList() {
+    public Map<Integer, Order> getOrderList() {
         return orderList;
     }
 
-    public void setOrderList(List<Order> orderList) {
+    public void setOrderList(Map<Integer, Order> orderList) {
         this.orderList = orderList;
     }
 
+    public Map<Integer, DeliveryPerson> getDeliveryPersonList() {
+        return deliveryPersonList;
+    }
+
+    public void setDeliveryPersonList(Map<Integer, DeliveryPerson> deliveryPersonList) {
+        this.deliveryPersonList = deliveryPersonList;
+    }
+
+    public Map<Integer, Delivery> getDeliveryList() {
+        return deliveryList;
+    }
+
+    public void setDeliveryList(Map<Integer, Delivery> deliveryList) {
+        this.deliveryList = deliveryList;
+    }
+
     public void addOrder(Order order) {
-        orderList.add(order);
+        orderList.put(order.getIdOrder(), order);
     }
 
     public void addProducts(Product product) {
-        this.productList.add(product);
+        this.productList.put(product.getId(), product);
     }
+
+    public void addDeliveryPerson(DeliveryPerson deliveryPerson) {
+        this.deliveryPersonList.put(deliveryPerson.getId(), deliveryPerson);
+    }
+
+    public void addDelivery(Delivery delivery) {
+        this.deliveryList.put(delivery.getId(), delivery);
+    }
+
+    public String productsInString() {
+        return productList.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> entry.getValue().getName())
+                .collect(Collectors.joining(", ", "{[", "]}"));
+    }
+
+    public String deliveriesPersonInString() {
+        return deliveryPersonList.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> entry.getValue().getEmail())
+                .collect(Collectors.joining(", ", "{[", "]}"));
+    }
+
 }
 
